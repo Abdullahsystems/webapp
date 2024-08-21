@@ -1,53 +1,64 @@
-resource "azurerm_service_plan" "webapp-plan" {
-  name                = "webapp-plan"
-  resource_group_name = azurerm_resource_group.RS1.name
-  location            = var.loc.location
-  sku_name            = "S1"
-  os_type             = "Windows"
-  depends_on = [ azurerm_resource_group.RS1 ]
+resource "azurerm_resource_group" "rsg" {
+    name = "rsg"
+    location = "northeurope"
   
 }
+resource "azurerm_virtual_network" "VNET1" {
+    address_space = ["10.0.0.0/16"]
+    location = "northeurope"
+    name = "Vnet1"
+    resource_group_name = azurerm_resource_group.rsg.name
+    depends_on = [ azurerm_resource_group.rsg ] 
+}
+resource "azurerm_subnet" "subnet1" {
+    name = "subnet1"
+    resource_group_name = azurerm_resource_group.rsg.name
+    virtual_network_name = azurerm_virtual_network.VNET1.name
+    address_prefixes = ["10.0.0.0/24"] 
+    depends_on = [ azurerm_virtual_network.VNET1 ]
+}
+resource "azurerm_network_security_group" "NSG_for_lb_machines" {
+  name = "NSG_for_lb_machines"
+  resource_group_name = azurerm_resource_group.rsg.name
+  location = "northeurope"
+  depends_on = [ azurerm_resource_group.rsg ]
+}
+resource "azurerm_network_interface" "NIC11" {
+  name                = "NIC11"
+  location            = "northeurope"
+  resource_group_name = azurerm_resource_group.rsg.name
 
-resource "azurerm_windows_web_app" "webapp" {
-  name                = "webappperonaltest"
-  resource_group_name = azurerm_resource_group.RS1.name
-  location            = azurerm_resource_group.RS1.location
-  service_plan_id     = azurerm_service_plan.webapp-plan.id
-  depends_on = [ azurerm_resource_group.RS1,azurerm_service_plan.webapp-plan ]
-  
-  site_config {
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.subnet1.id
+    private_ip_address_allocation = "Dynamic"
   }
-  https_only = true
 }
-  resource "azurerm_app_service_source_control" "github" {
-  app_id = azurerm_windows_web_app.webapp.id
-  repo_url = "https://github.com/Abdullahsystems/webapp"
-  branch   = "main"  
+resource "azurerm_windows_virtual_machine" "VM1" {
+  name                = "VM1"
+  resource_group_name = azurerm_resource_group.rsg.name
+  location            = "northeurope"
+  size                = "Standard_D2as_v4"
+  admin_username      = "adminuser"
+  admin_password      = "P@$$w0rd1234!"
+  network_interface_ids = [
+    azurerm_network_interface.NIC11.id,
+  ]
 
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
 }
-resource "azurerm_windows_web_app_slot" "Testing" {
-    name = "Testing3"
-    
-    app_service_id = azurerm_windows_web_app.webapp.id
-    site_config {
-        
-    } 
-    
+resource "azurerm_network_interface_security_group_association" "vmasnsg" {
+  network_interface_id      = azurerm_network_interface.NIC11.id
+  network_security_group_id = azurerm_network_security_group.NSG_for_lb_machines.id
+  depends_on = [azurerm_network_security_group.NSG_for_lb_machines,azurerm_network_interface.NIC22 ]
 }
-resource "azurerm_windows_web_app_slot" "Testing2" {
-    name = "Testing2"
-    
-    app_service_id = azurerm_windows_web_app.webapp.id
-    site_config {
-        
-    } 
-}
-#   resource "azurerm_app_service_source_control" "github1" {
-#   app_id = azurerm_windows_web_app_slot.Testing.id
-#   repo_url = "https://github.com/Abdullahsystems/webapp"
-#   branch   = "testinngwebapp"  
-
- 
-
-# }
-
