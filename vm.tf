@@ -60,5 +60,5 @@ resource "azurerm_windows_virtual_machine" "VM1" {
 resource "azurerm_network_interface_security_group_association" "vmasnsg" {
   network_interface_id      = azurerm_network_interface.NIC11.id
   network_security_group_id = azurerm_network_security_group.NSG_for_lb_machines.id
-  depends_on = [azurerm_network_security_group.NSG_for_lb_machines,azurerm_network_interface.NIC22 ]
+  depends_on = [azurerm_network_security_group.NSG_for_lb_machines,azurerm_network_interface.NIC11 ]
 }
