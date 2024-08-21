@@ -26,13 +26,21 @@ resource "azurerm_windows_web_app" "webapp" {
 
 }
 resource "azurerm_windows_web_app_slot" "Testing" {
-    name = "Testing"
+    name = "Testing3"
     
     app_service_id = azurerm_windows_web_app.webapp.id
     site_config {
         
     } 
     
+}
+resource "azurerm_windows_web_app_slot" "Testing2" {
+    name = "Testing2"
+    
+    app_service_id = azurerm_windows_web_app.webapp.id
+    site_config {
+        
+    } 
 }
 #   resource "azurerm_app_service_source_control" "github1" {
 #   app_id = azurerm_windows_web_app_slot.Testing.id
