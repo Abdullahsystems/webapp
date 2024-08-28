@@ -38,7 +38,7 @@ resource "azurerm_windows_virtual_machine" "VM1" {
   name                = "VM1"
   resource_group_name = azurerm_resource_group.rsg.name
   location            = "northeurope"
-  size                = "Standard_B2ms"
+  size                = "Standard_D2s_v3"
   admin_username      = "adminuser"
   admin_password      = "P@$$w0rd1234!"
   network_interface_ids = [
